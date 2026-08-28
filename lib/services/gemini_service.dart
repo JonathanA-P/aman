@@ -12,7 +12,7 @@ class GeminiService {
     }
 
     final model = GenerativeModel(
-      model: 'gemini-1.5-flash-latest',
+      model: 'gemini-flash-latest',
       apiKey: _apiKey,
       generationConfig: GenerationConfig(
         responseMimeType: 'application/json',
@@ -80,7 +80,7 @@ Analisis situasi berikut:
     }
 
     final model = GenerativeModel(
-      model: 'gemini-1.5-flash-latest',
+      model: 'gemini-flash-latest',
       apiKey: _apiKey,
       systemInstruction: Content.system('''
 Kamu adalah asisten hukum AI yang ahli di Indonesia. Tugasmu adalah menjelaskan istilah hukum yang diberikan oleh pengguna dengan cara yang sangat sederhana dan mudah dipahami oleh orang awam.
