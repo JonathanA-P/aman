@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../checker/legal_checker_screen.dart';
 import 'profile_dialog.dart';
-import '../../services/gemini_service.dart';
+import '../../services/ai_service.dart';
 
 class BerandaScreen extends StatefulWidget {
   const BerandaScreen({super.key});
@@ -200,7 +200,7 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                     );
                                     
                                     try {
-                                      final result = await GeminiService.explainVocabulary(_kosaKataController.text.trim());
+                                      final result = await AIService.explainVocabulary(_kosaKataController.text.trim());
                                       if (!context.mounted) {
                                         return;
                                       }
@@ -230,7 +230,7 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                               ),
                                               const SizedBox(height: 16),
                                               Text(
-                                                result, 
+                                                result.definisi, 
                                                 style: const TextStyle(
                                                   fontFamily: 'Outfit',
                                                   fontSize: 14, 

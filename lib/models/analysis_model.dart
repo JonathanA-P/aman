@@ -1,11 +1,12 @@
+import 'dart:io';
+
 class LegalAnalysisRequest {
   final String situasi;
   final String kapan;
   final String dimana;
   final String hasEvidence;
   final String tindakan;
-  
-  // Nanti bisa ditambahkan image byte data untuk attachment
+  final File? attachment;
 
   LegalAnalysisRequest({
     required this.situasi,
@@ -13,6 +14,7 @@ class LegalAnalysisRequest {
     required this.dimana,
     required this.hasEvidence,
     required this.tindakan,
+    this.attachment,
   });
 }
 

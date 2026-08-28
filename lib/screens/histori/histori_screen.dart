@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import '../checker/legal_checker_screen.dart';
+import '../../services/ai_service.dart';
+import '../../models/panduan_model.dart';
+import '../../models/analysis_model.dart';
+import '../panduan/panduan_detail_screen.dart';
+import '../checker/hasil_analisis_screen.dart';
 
 class HistoriScreen extends StatefulWidget {
   const HistoriScreen({super.key});
@@ -12,6 +16,55 @@ class HistoriScreen extends StatefulWidget {
 class _HistoriScreenState extends State<HistoriScreen> {
   int _selectedTab = 0; // 0 for Hasil Analisis, 1 for Istilah Hukum
   String _searchQuery = "";
+  bool _isLoading = false;
+  
+  final List<Map<String, String>> _dummyHasilAnalisis = [
+    {"title": "Penipuan Online", "date": "Hari ini"},
+    {"title": "Pencurian Kendaraan", "date": "Kemarin"},
+    {"title": "Sengketa Lahan", "date": "23 Jan"},
+    {"title": "Pencemaran Nama Baik", "date": "20 Jan"},
+    {"title": "Masalah Ketenagakerjaan", "date": "18 Jan"},
+  ];
+
+  final List<Map<String, String>> _dummyIstilahHukum = [
+    {"title": "Wanprestasi", "desc": "Kelalaian debitur dalam memenuhi..."},
+    {"title": "Gugatan", "desc": "Tuntutan hak ke pengadilan..."},
+    {"title": "Somasi", "desc": "Teguran tertulis sebelum..."},
+    {"title": "Pidana", "desc": "Tindak kejahatan yang..."},
+    {"title": "Perdata", "desc": "Hukum yang mengatur hubungan..."},
+  ];
+
+  Future<void> _searchVocabulary(String query) async {
+    if (query.trim().isEmpty) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final panduan = await AIService.explainVocabulary(query);
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PanduanDetailScreen(panduan: panduan),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mencari istilah: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,9 +150,11 @@ class _HistoriScreenState extends State<HistoriScreen> {
                         children: [
                           Expanded(
                             child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
                               onTap: () {
                                 setState(() {
                                   _selectedTab = 0;
+                                  _searchQuery = ""; // Reset search when switching tabs
                                 });
                               },
                               child: Container(
@@ -121,9 +176,11 @@ class _HistoriScreenState extends State<HistoriScreen> {
                           ),
                           Expanded(
                             child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
                               onTap: () {
                                 setState(() {
                                   _selectedTab = 1;
+                                  _searchQuery = ""; // Reset search when switching tabs
                                 });
                               },
                               child: Container(
@@ -164,10 +221,40 @@ class _HistoriScreenState extends State<HistoriScreen> {
                             _searchQuery = value;
                           });
                         },
+                        onSubmitted: (value) {
+                          if (_selectedTab == 1) {
+                            _searchVocabulary(value);
+                          } else {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          }
+                        },
                         decoration: InputDecoration(
-                          hintText: _selectedTab == 0 ? "Cari Hasil Analisis" : "Cari Istilah Hukum",
+                          hintText: _selectedTab == 0 ? "Cari Hasil Analisis" : "Cari Istilah Hukum (tekan Enter)",
                           hintStyle: const TextStyle(fontSize: 14, color: AppColors.textMuted),
-                          suffixIcon: const Icon(Icons.search, color: AppColors.brandNavy),
+                          suffixIcon: _isLoading 
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: SizedBox(
+                                    width: 16, 
+                                    height: 16, 
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.brandNavy)
+                                  ),
+                                )
+                              : GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () {
+                                    if (_selectedTab == 1 && _searchQuery.isNotEmpty) {
+                                      _searchVocabulary(_searchQuery);
+                                    } else if (_selectedTab == 0) {
+                                      setState(() {
+                                        // It will automatically filter because _searchQuery is in state
+                                      });
+                                    }
+                                  },
+                                  child: const Icon(Icons.search, color: AppColors.brandNavy),
+                                ),
                           fillColor: Colors.white,
                           filled: true,
                           contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
@@ -194,12 +281,10 @@ class _HistoriScreenState extends State<HistoriScreen> {
           
           const SizedBox(height: 20), // Reduced from 100 because 80 was absorbed by the Stack
           Expanded(
-            child: _searchQuery.isNotEmpty
-                ? _buildEmptySearchState()
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                    child: _selectedTab == 0 ? _buildListHasilAnalisis() : _buildListIstilahHukum(),
-                  ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: _selectedTab == 0 ? _buildListHasilAnalisis() : _buildListIstilahHukum(),
+            ),
           ),
         ],
       ),
@@ -245,71 +330,93 @@ class _HistoriScreenState extends State<HistoriScreen> {
   }
 
   Widget _buildListHasilAnalisis() {
-    final List<Map<String, String>> dummyData = [
-      {"title": "Penipuan Online", "date": "Hari ini"},
-      {"title": "Pencurian Kendaraan", "date": "Kemarin"},
-      {"title": "Sengketa Lahan", "date": "23 Jan"},
-      {"title": "Pencemaran Nama Baik", "date": "20 Jan"},
-      {"title": "Masalah Ketenagakerjaan", "date": "18 Jan"},
-    ];
+    final filteredData = _searchQuery.isEmpty 
+      ? _dummyHasilAnalisis 
+      : _dummyHasilAnalisis.where((item) => 
+          item['title']!.toLowerCase().contains(_searchQuery.toLowerCase())
+        ).toList();
+
+    if (filteredData.isEmpty) {
+      return _buildEmptySearchState();
+    }
     
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: dummyData.length,
+      itemCount: filteredData.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final item = dummyData[index];
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE9EBF8)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(5),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              )
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FE),
-                  borderRadius: BorderRadius.circular(12),
+        final item = filteredData[index];
+        return GestureDetector(
+          onTap: () {
+            // Dummy response for history detail
+            final dummyResponse = LegalAnalysisResponse(
+              status: "Hati-hati",
+              penjelasanSingkat: "Masalah ${item['title']} ini memerlukan perhatian karena berpotensi merugikan hak hukum Anda. Segera lakukan dokumentasi.",
+              potensiRisiko: ["Kehilangan hak kepemilikan atau uang", "Tuntutan balik dari pihak lain", "Proses yang memakan waktu lama"],
+              langkahHukum: ["Kumpulkan semua bukti transaksi atau surat menyurat", "Berikan somasi tertulis", "Konsultasi ke mediator atau advokat"],
+              tips: ["Jangan menghapus chat atau bukti apapun", "Bersikap kooperatif namun tegas"],
+              disclaimer: "Analisis ini dihasilkan oleh AI berdasarkan riwayat masa lalu dan bukan nasihat hukum profesional."
+            );
+            Navigator.push(
+              context, 
+              MaterialPageRoute(builder: (context) => HasilAnalisisScreen(
+                response: dummyResponse,
+                isFromHistory: true,
+              ))
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE9EBF8)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(5),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                )
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FE),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.description_outlined, color: AppColors.brandNavy),
                 ),
-                child: const Icon(Icons.description_outlined, color: AppColors.brandNavy),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item['title']!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                        color: AppColors.brandNavy,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item['title']!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          color: AppColors.brandNavy,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item['date']!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textMuted,
+                      const SizedBox(height: 4),
+                      Text(
+                        item['date']!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const Icon(Icons.chevron_right, color: AppColors.textMuted),
-            ],
+                const Icon(Icons.chevron_right, color: AppColors.textMuted),
+              ],
+            ),
           ),
         );
       },
@@ -317,53 +424,73 @@ class _HistoriScreenState extends State<HistoriScreen> {
   }
 
   Widget _buildListIstilahHukum() {
-    final List<Map<String, String>> dummyData = [
-      {"title": "Wanprestasi", "desc": "Kelalaian debitur dalam memenuhi..."},
-      {"title": "Gugatan", "desc": "Tuntutan hak ke pengadilan..."},
-      {"title": "Somasi", "desc": "Teguran tertulis sebelum..."},
-      {"title": "Pidana", "desc": "Tindak kejahatan yang..."},
-      {"title": "Perdata", "desc": "Hukum yang mengatur hubungan..."},
-    ];
+    final filteredData = _searchQuery.isEmpty 
+      ? _dummyIstilahHukum 
+      : _dummyIstilahHukum.where((item) => 
+          item['title']!.toLowerCase().contains(_searchQuery.toLowerCase()) || 
+          item['desc']!.toLowerCase().contains(_searchQuery.toLowerCase())
+        ).toList();
+
+    if (filteredData.isEmpty && !_isLoading) {
+      return _buildEmptySearchState();
+    }
     
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: dummyData.length,
+      itemCount: filteredData.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final item = dummyData[index];
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE9EBF8)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(5),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              )
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FE),
-                  borderRadius: BorderRadius.circular(12),
+        final item = filteredData[index];
+        return GestureDetector(
+          onTap: () {
+            // Dummy response for history detail
+            final dummyPanduan = PanduanModel(
+              kategori: "Umum",
+              judul: item['title']!,
+              definisi: item['desc']!,
+              poinPenting: ["Terkait dengan hukum perdata", "Membutuhkan bukti tertulis"],
+              langkahLangkah: ["Konsultasikan dengan pengacara", "Kumpulkan dokumen pendukung"]
+            );
+            Navigator.push(
+              context, 
+              MaterialPageRoute(builder: (context) => PanduanDetailScreen(
+                panduan: dummyPanduan,
+              ))
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE9EBF8)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(5),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                )
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FE),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.menu_book_outlined, color: AppColors.goldYellow),
                 ),
-                child: const Icon(Icons.menu_book_outlined, color: AppColors.goldYellow),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item['title']!,
-                      style: const TextStyle(
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item['title']!,
+                        style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                         color: AppColors.brandNavy,
@@ -383,8 +510,9 @@ class _HistoriScreenState extends State<HistoriScreen> {
               const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
-        );
-      },
-    );
+        ),
+      );
+    },
+  );
   }
 }

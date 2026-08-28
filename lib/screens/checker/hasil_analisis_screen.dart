@@ -6,8 +6,13 @@ import '../../models/analysis_model.dart';
 
 class HasilAnalisisScreen extends StatefulWidget {
   final LegalAnalysisResponse response;
+  final bool isFromHistory;
   
-  const HasilAnalisisScreen({super.key, required this.response});
+  const HasilAnalisisScreen({
+    super.key, 
+    required this.response,
+    this.isFromHistory = false,
+  });
 
   @override
   State<HasilAnalisisScreen> createState() => _HasilAnalisisScreenState();
@@ -18,10 +23,12 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
   @override
   void initState() {
     super.initState();
-    // Show the warning dialog shortly after screen loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showWarningDialog();
-    });
+    if (!widget.isFromHistory) {
+      // Show the warning dialog shortly after screen loads
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showWarningDialog();
+      });
+    }
   }
 
   void _showWarningDialog() {
@@ -100,8 +107,15 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      if (widget.isFromHistory)
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                          onPressed: () => Navigator.pop(context),
+                        )
+                      else
+                        const SizedBox(width: 48), // Spacer to maintain alignment
                       Container(
                         width: 40,
                         height: 40,
@@ -299,8 +313,12 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
                     height: 50,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Pop back to first screen (Beranda)
-                        Navigator.popUntil(context, (route) => route.isFirst);
+                        if (widget.isFromHistory) {
+                          Navigator.pop(context);
+                        } else {
+                          // Pop back to first screen (Beranda)
+                          Navigator.popUntil(context, (route) => route.isFirst);
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.goldYellow,
@@ -309,7 +327,10 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text("Mulai Analisis Baru", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                      child: Text(
+                        widget.isFromHistory ? "Tutup" : "Mulai Analisis Baru", 
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)
+                      ),
                     ),
                   ),
                 )

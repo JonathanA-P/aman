@@ -1,198 +1,253 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../models/panduan_model.dart';
 
 class PanduanDetailScreen extends StatelessWidget {
-  final String title;
+  final PanduanModel panduan;
 
-  const PanduanDetailScreen({super.key, required this.title});
+  const PanduanDetailScreen({super.key, required this.panduan});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundBlue,
+      backgroundColor: Colors.white,
       body: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.topCenter,
         children: [
-          Container(
-            height: 200,
-            decoration: const BoxDecoration(
-              color: AppColors.brandNavy,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
+          // Curved Blue Header Background
+          ClipPath(
+            clipper: _HeaderClipper(),
+            child: Container(
+              height: 280,
+              decoration: const BoxDecoration(
+                color: AppColors.brandNavy,
               ),
             ),
           ),
+          
           SafeArea(
             bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(51),
-                          shape: BoxShape.circle,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Top Nav Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(51),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            top: 150,
-            left: 20,
-            right: 20,
-            bottom: 20, // Allow it to stretch to bottom with margin
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(13),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Definisi",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
+                      // Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          panduan.kategori,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.textDark,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Pemutusan Hubungan Kerja (PHK) sepihak adalah pengakhiran hubungan kerja oleh perusahaan tanpa kesepakatan dari pekerja, dan/atau tanpa penetapan dari lembaga penyelesaian perselisihan hubungan industrial.",
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.grey.shade700,
-                            height: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          "Hak Pekerja (Sesuai UU Cipta Kerja)",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildListItem("1", "Uang Pesangon (UP)"),
-                        _buildListItem("2", "Uang Penghargaan Masa Kerja (UPMK)"),
-                        _buildListItem("3", "Uang Penggantian Hak (UPH)"),
-                        const SizedBox(height: 24),
-                        const Text(
-                          "Langkah yang bisa diambil",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildListItem("1", "Menolak PHK secara tertulis (buat surat penolakan)."),
-                        _buildListItem("2", "Melakukan perundingan bipartit dengan pihak perusahaan."),
-                        _buildListItem("3", "Melaporkan ke Disnaker jika tidak ada kesepakatan (Tripartit)."),
-                        
-                        const SizedBox(height: 40),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Fitur Hubungi Bantuan Hukum akan segera hadir!')),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.brandNavy,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text(
-                              "Hubungi Bantuan Hukum",
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 40), // Bottom padding
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Header Image
+                Padding(
+                  padding: const EdgeInsets.only(left: 40, top: 0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Image.asset(
+                      'assets/images/legal_checker_icon.png',
+                      height: 80,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
+
+                // Main Content Area
+                Expanded(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Scrollable content
+                      Positioned.fill(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.only(
+                            top: 60, // Space for the overlapping title card
+                            left: 20,
+                            right: 20,
+                            bottom: 100, // Space for the bottom button
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                panduan.definisi,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.grey.shade700,
+                                  height: 1.6,
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+                              
+                              // Timeline list for Poin Penting
+                              ...List.generate(panduan.poinPenting.length, (index) {
+                                bool isLast = index == panduan.poinPenting.length - 1;
+                                return _buildTimelineItem(
+                                  (index + 1).toString(),
+                                  panduan.poinPenting[index],
+                                  isLast,
+                                );
+                              }),
+
+                              const SizedBox(height: 32),
+                              
+                              // Expansion Tile for Langkah-Langkah
+                              if (panduan.langkahLangkah.isNotEmpty)
+                                _buildExpansionLangkah(panduan.langkahLangkah),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Overlapping Title Card
+                      Positioned(
+                        top: -10,
+                        left: 20,
+                        right: 20,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFC8C6F9), width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(10),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            panduan.judul,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.brandNavy,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Bottom Button
+          Positioned(
+            bottom: 24,
+            left: 20,
+            right: 20,
+            child: SizedBox(
+              height: 52,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFDCA91D), // Gold/Yellow button
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  "Tutup",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildListItem(String number, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+  Widget _buildTimelineItem(String number, String text, bool isLast) {
+    return IntrinsicHeight(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: AppColors.backgroundBlue,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              number,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.brandNavy,
-              ),
+          SizedBox(
+            width: 32,
+            child: Column(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9EEFF), // Light purple background
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    number,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.brandNavy,
+                    ),
+                  ),
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 1.5,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      color: Colors.grey.shade300,
+                    ),
+                  )
+                else
+                  const SizedBox(height: 16), // Padding for last item
+              ],
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(top: 2),
+              padding: const EdgeInsets.only(bottom: 24.0, top: 2), // Space between items
               child: Text(
                 text,
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textDark,
-                  height: 1.4,
+                  height: 1.5,
                 ),
               ),
             ),
@@ -201,4 +256,90 @@ class PanduanDetailScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildExpansionLangkah(List<String> langkah) {
+    return Theme(
+      data: ThemeData(dividerColor: Colors.transparent),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF6F6FF), // Very light purple/blue background
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFC8C6F9), width: 1.5),
+        ),
+        child: ExpansionTile(
+          iconColor: AppColors.brandNavy,
+          collapsedIconColor: AppColors.brandNavy,
+          title: const Text(
+            "Langkah yang bisa dilakukan",
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.brandNavy,
+            ),
+          ),
+          childrenPadding: const EdgeInsets.only(left: 24, right: 24, bottom: 20),
+          children: langkah.map((step) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 6),
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFDCA91D), // Yellow dot
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      step,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade700,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, size.height - 40);
+    
+    // Create a smooth wave effect
+    path.quadraticBezierTo(
+      size.width * 0.25, 
+      size.height, 
+      size.width * 0.5, 
+      size.height - 30,
+    );
+    
+    path.quadraticBezierTo(
+      size.width * 0.75, 
+      size.height - 60, 
+      size.width, 
+      size.height - 20,
+    );
+    
+    path.lineTo(size.width, 0);
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

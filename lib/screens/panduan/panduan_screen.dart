@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../models/panduan_model.dart';
 import 'panduan_detail_screen.dart';
+import '../../services/ai_service.dart';
 
 class PanduanScreen extends StatefulWidget {
   const PanduanScreen({super.key});
@@ -12,6 +14,39 @@ class PanduanScreen extends StatefulWidget {
 class _PanduanScreenState extends State<PanduanScreen> {
   final List<String> _categories = ["Semua", "Pekerjaan", "Kontrak", "Perdata"];
   int _selectedCategoryIndex = 0;
+  bool _isLoading = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  Future<void> _searchVocabulary(String query) async {
+    if (query.trim().isEmpty) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final panduan = await AIService.explainVocabulary(query);
+      if (!mounted) return;
+      
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PanduanDetailScreen(panduan: panduan),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   final List<Map<String, String>> _guidelines = [
     {
@@ -105,10 +140,23 @@ class _PanduanScreenState extends State<PanduanScreen> {
                     ],
                   ),
                   child: TextField(
+                    controller: _searchController,
+                    onSubmitted: _searchVocabulary,
                     decoration: InputDecoration(
                       hintText: "Cari istilah hukum...",
                       hintStyle: const TextStyle(fontSize: 14, color: AppColors.textMuted),
-                      suffixIcon: const Icon(Icons.search, color: AppColors.brandNavy),
+                      suffixIcon: _isLoading 
+                          ? const Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: SizedBox(
+                                width: 20, height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.brandNavy),
+                              ),
+                            )
+                          : IconButton(
+                              icon: const Icon(Icons.search, color: AppColors.brandNavy),
+                              onPressed: () => _searchVocabulary(_searchController.text),
+                            ),
                       fillColor: Colors.white,
                       filled: true,
                       contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
@@ -183,7 +231,13 @@ class _PanduanScreenState extends State<PanduanScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => PanduanDetailScreen(
-                          title: item["title"]!,
+                          panduan: PanduanModel(
+                            kategori: "Hukum",
+                            judul: item["title"]!,
+                            definisi: "Ini adalah penjelasan singkat mengenai ${item['title']}. (Fitur ini sedang dalam pengembangan, gunakan pencarian 'Istilah Hukum' di menu Histori untuk definisi AI).",
+                            poinPenting: ["Poin 1 terkait ${item['title']}", "Poin 2 terkait ${item['title']}"],
+                            langkahLangkah: ["Langkah pertama", "Langkah kedua"],
+                          ),
                         ),
                       ),
                     );

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import 'tahap3_screen.dart';
@@ -5,7 +6,13 @@ import '../../models/analysis_model.dart';
 
 class Tahap2Screen extends StatefulWidget {
   final String situasi;
-  const Tahap2Screen({super.key, required this.situasi});
+  final File? attachment;
+
+  const Tahap2Screen({
+    super.key,
+    required this.situasi,
+    this.attachment,
+  });
 
   @override
   State<Tahap2Screen> createState() => _Tahap2ScreenState();
@@ -181,6 +188,7 @@ class _Tahap2ScreenState extends State<Tahap2Screen> {
                           dimana: _dimanaController.text,
                           hasEvidence: _hasEvidence,
                           tindakan: _tindakanController.text,
+                          attachment: widget.attachment,
                         );
                         Navigator.push(context, MaterialPageRoute(builder: (context) => Tahap3Screen(request: request)));
                       },

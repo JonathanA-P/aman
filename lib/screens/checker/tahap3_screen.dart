@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
 import 'hasil_analisis_screen.dart';
 import '../../models/analysis_model.dart';
-import '../../services/gemini_service.dart';
+import '../../services/ai_service.dart';
 
 class Tahap3Screen extends StatefulWidget {
   final LegalAnalysisRequest request;
@@ -42,7 +42,7 @@ class _Tahap3ScreenState extends State<Tahap3Screen> {
     
     late LegalAnalysisResponse response;
     try {
-      response = await GeminiService.analyzeLegalSituation(widget.request);
+      response = await AIService.analyzeLegalSituation(widget.request);
     } catch (e) {
       if (mounted) {
         setState(() {
