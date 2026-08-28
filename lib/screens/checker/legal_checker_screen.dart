@@ -398,7 +398,7 @@ class _LegalSituationCheckerState extends State<LegalSituationChecker> {
                           height: 48,
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => const Tahap2Screen()));
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => Tahap2Screen(situasi: _inputController.text)));
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.goldYellow,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:aman/theme/app_theme.dart';
 import '../onboarding/onboarding_page.dart';
+import '../main_navigation_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -100,9 +102,16 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   void _navigateToOnboarding() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const OnboardingView()),
-    );
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+      );
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const OnboardingView()),
+      );
+    }
   }
 
   @override

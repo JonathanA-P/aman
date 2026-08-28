@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../main_navigation_screen.dart';
-import 'register_screen.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart' as flutter_dotenv;
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,7 +22,11 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _emailError;
   String? _passwordError;
 
+  bool _isLoading = false;
+  bool _isGoogleLoading = false;
+
   void _validateAndSubmit() {
+    if (_isLoading || _isGoogleLoading) return;
     setState(() {
       _emailError = null;
       _passwordError = null;
@@ -32,22 +37,107 @@ class _LoginScreenState extends State<LoginScreen> {
       bool isValid = true;
 
       if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
-        _emailError = 'Pastikan email sudah terdaftar';
+        _emailError = 'Masukkan email dengan benar';
         isValid = false;
       }
 
-      if (password.isEmpty) {
-        _passwordError = 'Password yang kamu masukkan salah';
+      if (password.isEmpty || password.length < 6) {
+        _passwordError = 'Password harus minimal 6 karakter';
         isValid = false;
       }
 
       if (isValid) {
+        _performLogin(email, password);
+      }
+    });
+  }
+
+  Future<void> _performLogin(String email, String password) async {
+    setState(() => _isLoading = true);
+    try {
+      final supabase = Supabase.instance.client;
+      final res = await supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      if (mounted) {
+        if (res.user != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+          );
+        }
+      }
+    } on AuthException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Terjadi kesalahan saat login')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    if (_isLoading || _isGoogleLoading) return;
+    setState(() => _isGoogleLoading = true);
+    
+    try {
+      final webClientId = flutter_dotenv.dotenv.env['GOOGLE_WEB_CLIENT_ID'];
+      if (webClientId == null || webClientId.isEmpty || webClientId == 'MASUKKAN_WEB_CLIENT_ID_KAMU_DISINI') {
+        throw 'GOOGLE_WEB_CLIENT_ID belum dikonfigurasi di .env';
+      }
+
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId: webClientId,
+      );
+      
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        setState(() => _isGoogleLoading = false);
+        return; // User cancelled
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final accessToken = googleAuth.accessToken;
+      final idToken = googleAuth.idToken;
+
+      if (accessToken == null || idToken == null) {
+        throw 'Gagal mendapatkan akses token dari Google.';
+      }
+
+      await Supabase.instance.client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
+      if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
         );
       }
-    });
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGoogleLoading = false);
+      }
+    }
   }
 
   @override
@@ -277,8 +367,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Fitur Lupa Password akan segera hadir!')),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
                           );
                         },
                         child: const Text(
@@ -307,14 +398,67 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        "Login",
-                        style: TextStyle(
-                          fontFamily: 'Manrope',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              "Login",
+                              style: TextStyle(
+                                fontFamily: 'Manrope',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: OutlinedButton(
+                      onPressed: _signInWithGoogle,
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFFC8C6F9), width: 1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
+                      child: _isGoogleLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF100E34),
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.network(
+                                  'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png',
+                                  width: 24,
+                                  height: 24,
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  "Masuk dengan Google",
+                                  style: TextStyle(
+                                    fontFamily: 'Manrope',
+                                    color: Color(0xFF100E34),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
                     ),
                   ),
                   const SizedBox(height: 24),

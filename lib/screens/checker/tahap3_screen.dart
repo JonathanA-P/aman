@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
 import 'hasil_analisis_screen.dart';
+import '../../models/analysis_model.dart';
+import '../../services/gemini_service.dart';
 
 class Tahap3Screen extends StatefulWidget {
-  const Tahap3Screen({super.key});
+  final LegalAnalysisRequest request;
+  
+  const Tahap3Screen({super.key, required this.request});
 
   @override
   State<Tahap3Screen> createState() => _Tahap3ScreenState();
@@ -22,10 +26,35 @@ class _Tahap3ScreenState extends State<Tahap3Screen> {
   @override
   void initState() {
     super.initState();
-    _startMockAnalysis();
+    _startAnalysis();
   }
 
-  void _startMockAnalysis() async {
+  void _startAnalysis() async {
+    final animationFuture = _runAnimationSequence();
+    
+    late LegalAnalysisResponse response;
+    try {
+      response = await GeminiService.analyzeLegalSituation(widget.request);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _currentStep = 7; // Failed state
+        });
+      }
+      return;
+    }
+
+    await animationFuture;
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HasilAnalisisScreen(response: response)),
+      );
+    }
+  }
+
+  Future<void> _runAnimationSequence() async {
     // 1. Initial State (Menganalisis)
     await Future.delayed(const Duration(seconds: 2));
     
@@ -46,14 +75,6 @@ class _Tahap3ScreenState extends State<Tahap3Screen> {
       });
     }
     await Future.delayed(const Duration(seconds: 2));
-
-    // Finish and navigate
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HasilAnalisisScreen()),
-      );
-    }
   }
 
   @override

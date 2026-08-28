@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import 'tahap3_screen.dart';
+import '../../models/analysis_model.dart';
 
 class Tahap2Screen extends StatefulWidget {
-  const Tahap2Screen({super.key});
+  final String situasi;
+  const Tahap2Screen({super.key, required this.situasi});
 
   @override
   State<Tahap2Screen> createState() => _Tahap2ScreenState();
@@ -11,6 +13,9 @@ class Tahap2Screen extends StatefulWidget {
 
 class _Tahap2ScreenState extends State<Tahap2Screen> {
   String _hasEvidence = "Ada";
+  final TextEditingController _kapanController = TextEditingController();
+  final TextEditingController _dimanaController = TextEditingController();
+  final TextEditingController _tindakanController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -84,12 +89,12 @@ class _Tahap2ScreenState extends State<Tahap2Screen> {
                   children: [
                     _buildLabel("Kapan kejadian tersebut terjadi?"),
                     const SizedBox(height: 8),
-                    _buildTextField("Ketikkan sesuatu"),
+                    _buildTextField("Ketikkan sesuatu", _kapanController),
                     const SizedBox(height: 24),
                     
                     _buildLabel("Dimana kejadian tersebut terjadi?"),
                     const SizedBox(height: 8),
-                    _buildTextField("Ketikkan sesuatu"),
+                    _buildTextField("Ketikkan sesuatu", _dimanaController),
                     const SizedBox(height: 24),
 
                     _buildLabel("Apakah kamu memiliki bukti?"),
@@ -106,6 +111,7 @@ class _Tahap2ScreenState extends State<Tahap2Screen> {
                     _buildLabel("Apa yang sudah kamu lakukan?"),
                     const SizedBox(height: 8),
                     TextField(
+                      controller: _tindakanController,
                       maxLines: 4,
                       decoration: InputDecoration(
                         hintText: "Misal: Sudah menghubungi HRD lewat WhatsApp, tapi tidak direspon selama 2 minggu...",
@@ -175,7 +181,14 @@ class _Tahap2ScreenState extends State<Tahap2Screen> {
                     height: 50,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const Tahap3Screen()));
+                        final request = LegalAnalysisRequest(
+                          situasi: widget.situasi,
+                          kapan: _kapanController.text,
+                          dimana: _dimanaController.text,
+                          hasEvidence: _hasEvidence,
+                          tindakan: _tindakanController.text,
+                        );
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => Tahap3Screen(request: request)));
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.goldYellow,
@@ -205,8 +218,9 @@ class _Tahap2ScreenState extends State<Tahap2Screen> {
     );
   }
 
-  Widget _buildTextField(String hint) {
+  Widget _buildTextField(String hint, TextEditingController controller) {
     return TextField(
+      controller: controller,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),

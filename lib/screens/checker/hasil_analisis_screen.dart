@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../theme/app_theme.dart';
 import 'hasil_analisis_detail_screen.dart';
+import '../../models/analysis_model.dart';
 
 class HasilAnalisisScreen extends StatefulWidget {
-  const HasilAnalisisScreen({super.key});
+  final LegalAnalysisResponse response;
+  
+  const HasilAnalisisScreen({super.key, required this.response});
 
   @override
   State<HasilAnalisisScreen> createState() => _HasilAnalisisScreenState();
@@ -44,7 +47,7 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
-                        "Analisis ini adalah panduan awal dan bukan keputusan hukum. Konsultasikan dengan profesional hukum untuk keputusan final.",
+                        widget.response.disclaimer,
                         style: TextStyle(fontSize: 13, color: AppColors.brandNavy, fontWeight: FontWeight.w600, height: 1.4),
                       ),
                     ),
@@ -208,7 +211,7 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+                                widget.response.penjelasanSingkat,
                                 maxLines: _isSummaryExpanded ? null : 4,
                                 overflow: _isSummaryExpanded ? null : TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -231,31 +234,16 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
                         ),
                         const SizedBox(height: 16),
                         _buildPointCard(
-                          title: "Hak",
-                          desc: "Hak kamu ditentukan disini, yuk lihat sekrang ...",
-                          icon: Icons.handshake,
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const HasilAnalisisDetailScreen(
-                                title: "Hak",
-                                description: "Berdasarkan situasi yang kamu ceritakan, kamu memiliki beberapa hak yang dilindungi oleh hukum Indonesia.",
-                                icon: Icons.handshake,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildPointCard(
-                          title: "Kewajiban",
-                          desc: "Melaporkan kejadian ke pihak berwenang dalam waktu 30 hari s...",
+                          title: "Langkah Hukum",
+                          desc: widget.response.langkahHukum.isNotEmpty ? widget.response.langkahHukum.first : "Tidak ada rekomendasi khusus",
                           icon: Icons.balance,
+                          pointCount: widget.response.langkahHukum.length,
                           onPressed: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const HasilAnalisisDetailScreen(
-                                title: "Kewajiban",
-                                description: "Berdasarkan situasi yang kamu ceritakan, kamu memiliki beberapa kewajiban yang harus dipenuhi.",
+                              builder: (context) => HasilAnalisisDetailScreen(
+                                title: "Langkah Hukum",
+                                description: widget.response.langkahHukum.map((e) => "- \$e").join('\n\n'),
                                 icon: Icons.balance,
                               ),
                             ),
@@ -263,16 +251,34 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
                         ),
                         const SizedBox(height: 16),
                         _buildPointCard(
-                          title: "Risiko",
-                          desc: "Risiko kadaluarsa klaim: batas waktu pengajuan tuntutan umum...",
+                          title: "Potensi Risiko",
+                          desc: widget.response.potensiRisiko.isNotEmpty ? widget.response.potensiRisiko.first : "Risiko rendah",
                           icon: Icons.gavel,
+                          pointCount: widget.response.potensiRisiko.length,
                           onPressed: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const HasilAnalisisDetailScreen(
-                                title: "Risiko",
-                                description: "Berdasarkan situasi yang kamu ceritakan, berikut adalah beberapa risiko yang dapat terjadi.",
+                              builder: (context) => HasilAnalisisDetailScreen(
+                                title: "Potensi Risiko",
+                                description: widget.response.potensiRisiko.map((e) => "- \$e").join('\n\n'),
                                 icon: Icons.gavel,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildPointCard(
+                          title: "Tips Tambahan",
+                          desc: widget.response.tips.isNotEmpty ? widget.response.tips.first : "Pastikan mengumpulkan bukti yang cukup",
+                          icon: Icons.lightbulb,
+                          pointCount: widget.response.tips.length,
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => HasilAnalisisDetailScreen(
+                                title: "Tips Tambahan",
+                                description: widget.response.tips.map((e) => "- \$e").join('\n\n'),
+                                icon: Icons.lightbulb,
                               ),
                             ),
                           ),
@@ -319,6 +325,7 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
     required String title,
     required String desc,
     required IconData icon,
+    required int pointCount,
     required VoidCallback onPressed,
   }) {
     return Container(
@@ -388,7 +395,7 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            "4 poin penting ditemukan",
+            "\$pointCount poin penting ditemukan",
             style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
           ),
         ],
