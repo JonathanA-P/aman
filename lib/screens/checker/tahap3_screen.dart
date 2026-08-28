@@ -17,6 +17,7 @@ class Tahap3Screen extends StatefulWidget {
 class _Tahap3ScreenState extends State<Tahap3Screen> {
   int _currentStep = 0;
   bool _hasError = false;
+  String _errorMessage = "";
   final List<String> _steps = [
     "Memahami situasimu",
     "Menganalisis informasi",
@@ -31,6 +32,12 @@ class _Tahap3ScreenState extends State<Tahap3Screen> {
   }
 
   void _startAnalysis() async {
+    setState(() {
+      _hasError = false;
+      _errorMessage = "";
+      _currentStep = 0;
+    });
+
     final animationFuture = _runAnimationSequence();
     
     late LegalAnalysisResponse response;
@@ -40,6 +47,7 @@ class _Tahap3ScreenState extends State<Tahap3Screen> {
       if (mounted) {
         setState(() {
           _hasError = true;
+          _errorMessage = e.toString();
           _currentStep = 7; // Failed state
         });
       }
@@ -438,13 +446,31 @@ class _Tahap3ScreenState extends State<Tahap3Screen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40),
           child: Text(
-            "Aku tidak bisa menemukan sinyalmu nih",
+            "Aku tidak bisa menemukan sinyalmu nih.\n\n$_errorMessage",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade500,
               fontWeight: FontWeight.w500,
               height: 1.4,
+            ),
+          ),
+        ),
+        const SizedBox(height: 32),
+        ElevatedButton(
+          onPressed: _startAnalysis,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFCC9913),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text(
+            "Coba Lagi",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
