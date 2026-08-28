@@ -72,12 +72,6 @@ class _Tahap2ScreenState extends State<Tahap2Screen> {
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/beranda_bg.png',
-              fit: BoxFit.cover,
-            ),
-          ),
           SafeArea(
             child: Column(
               children: [

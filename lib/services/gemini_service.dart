@@ -12,7 +12,7 @@ class GeminiService {
     }
 
     final model = GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-flash-latest',
       apiKey: _apiKey,
       generationConfig: GenerationConfig(
         responseMimeType: 'application/json',
@@ -49,7 +49,16 @@ Analisis situasi berikut:
         throw Exception("Empty response from Gemini.");
       }
 
-      final jsonMap = jsonDecode(responseText);
+      String cleanText = responseText;
+      if (cleanText.startsWith('```json')) {
+        cleanText = cleanText.substring(7);
+      } else if (cleanText.startsWith('```')) {
+        cleanText = cleanText.substring(3);
+      }
+      if (cleanText.endsWith('```')) {
+        cleanText = cleanText.substring(0, cleanText.length - 3);
+      }
+      final jsonMap = jsonDecode(cleanText.trim());
       
       return LegalAnalysisResponse(
         status: jsonMap['status'] ?? 'Hati-hati',
@@ -61,7 +70,34 @@ Analisis situasi berikut:
       );
 
     } catch (e) {
-      throw Exception('Gagal menganalisis data: \$e');
+      throw Exception('Gagal menganalisis data: $e');
+    }
+  }
+
+  static Future<String> explainVocabulary(String word) async {
+    if (_apiKey.isEmpty) {
+      throw Exception('Gemini API Key is not set.');
+    }
+
+    final model = GenerativeModel(
+      model: 'gemini-1.5-flash-latest',
+      apiKey: _apiKey,
+      systemInstruction: Content.system('''
+Kamu adalah asisten hukum AI yang ahli di Indonesia. Tugasmu adalah menjelaskan istilah hukum yang diberikan oleh pengguna dengan cara yang sangat sederhana dan mudah dipahami oleh orang awam.
+Aturan:
+1. Jelaskan dalam maksimal 1-3 kalimat pendek.
+2. Gunakan bahasa Indonesia yang santai tapi sopan.
+3. Langsung ke intinya tanpa basa-basi.
+'''),
+    );
+
+    final prompt = 'Jelaskan arti dari istilah hukum ini: $word';
+
+    try {
+      final response = await model.generateContent([Content.text(prompt)]);
+      return response.text ?? 'Maaf, saya tidak dapat menemukan penjelasan untuk kata tersebut.';
+    } catch (e) {
+      throw Exception('Gagal menghubungi AI: $e');
     }
   }
 }

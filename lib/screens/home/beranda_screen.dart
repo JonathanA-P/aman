@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../checker/legal_checker_screen.dart';
 import 'profile_dialog.dart';
+import '../../services/gemini_service.dart';
 
 class BerandaScreen extends StatefulWidget {
   const BerandaScreen({super.key});
@@ -13,6 +14,13 @@ class BerandaScreen extends StatefulWidget {
 
 class _BerandaScreenState extends State<BerandaScreen> {
   int _selectedModeIndex = 0; // 0: Kamera, 1: Galeri, 2: PDF
+  final TextEditingController _kosaKataController = TextEditingController();
+
+  @override
+  void dispose() {
+    _kosaKataController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,6 +160,7 @@ class _BerandaScreenState extends State<BerandaScreen> {
                               ),
                               const SizedBox(height: 12),
                               TextField(
+                                controller: _kosaKataController,
                                 decoration: const InputDecoration(
                                   hintText: "Tulis apa yang kamu kurang paham",
                                   hintStyle: TextStyle(
@@ -181,10 +190,80 @@ class _BerandaScreenState extends State<BerandaScreen> {
                                 width: double.infinity,
                                 height: 40,
                                 child: ElevatedButton(
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Fitur pencarian kosa kata akan segera hadir!')),
+                                  onPressed: () async {
+                                    if (_kosaKataController.text.trim().isEmpty) return;
+                                    
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (context) => const Center(child: CircularProgressIndicator()),
                                     );
+                                    
+                                    try {
+                                      final result = await GeminiService.explainVocabulary(_kosaKataController.text.trim());
+                                      if (!context.mounted) {
+                                        return;
+                                      }
+                                      
+                                      Navigator.pop(context); // close loading
+                                      
+                                      showModalBottomSheet(
+                                        context: context,
+                                        backgroundColor: Colors.white,
+                                        shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                                        ),
+                                        builder: (context) => Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                "Penjelasan Kosa Kata", 
+                                                style: TextStyle(
+                                                  fontFamily: 'Manrope',
+                                                  fontSize: 16, 
+                                                  fontWeight: FontWeight.w800, 
+                                                  color: Color(0xFF2F2B8E)
+                                                )
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Text(
+                                                result, 
+                                                style: const TextStyle(
+                                                  fontFamily: 'Outfit',
+                                                  fontSize: 14, 
+                                                  height: 1.5,
+                                                  color: Color(0xFF1A2332)
+                                                )
+                                              ),
+                                              const SizedBox(height: 32),
+                                              SizedBox(
+                                                width: double.infinity, 
+                                                height: 48,
+                                                child: ElevatedButton(
+                                                  onPressed: () => Navigator.pop(context), 
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: const Color(0xFF4F48EC),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(12)
+                                                    )
+                                                  ),
+                                                  child: const Text("Tutup", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))
+                                                )
+                                              )
+                                            ],
+                                          ),
+                                        )
+                                      );
+                                    } catch (e) {
+                                      if (!context.mounted) {
+                                        return;
+                                      }
+                                      Navigator.pop(context); // close loading
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal: $e')));
+                                    }
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFFCC9913),
@@ -373,6 +452,22 @@ class _BerandaScreenState extends State<BerandaScreen> {
         setState(() {
           _selectedModeIndex = index;
         });
+        
+        AttachmentType type = AttachmentType.none;
+        if (index == 0) {
+          type = AttachmentType.camera;
+        } else if (index == 1) {
+          type = AttachmentType.gallery;
+        } else if (index == 2) {
+          type = AttachmentType.document;
+        }
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LegalSituationChecker(initialAttachmentType: type),
+          ),
+        );
       },
       child: Container(
         height: 122,

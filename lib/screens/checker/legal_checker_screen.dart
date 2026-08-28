@@ -1,13 +1,20 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../theme/app_theme.dart';
-import '../camera/camera_screen.dart';
 import 'tahap2_screen.dart';
 
-enum AttachmentType { none, image, document }
+enum AttachmentType { none, image, document, camera, gallery }
 
 class LegalSituationChecker extends StatefulWidget {
-  const LegalSituationChecker({super.key});
+  final AttachmentType initialAttachmentType;
+
+  const LegalSituationChecker({
+    super.key,
+    this.initialAttachmentType = AttachmentType.none,
+  });
 
   @override
   State<LegalSituationChecker> createState() => _LegalSituationCheckerState();
@@ -15,7 +22,80 @@ class LegalSituationChecker extends StatefulWidget {
 
 class _LegalSituationCheckerState extends State<LegalSituationChecker> {
   final TextEditingController _inputController = TextEditingController();
-  AttachmentType _attachmentType = AttachmentType.none;
+  late AttachmentType _attachmentType;
+
+  File? _selectedFile;
+  String? _fileName;
+  String? _fileExtension;
+  String? _fileSize;
+
+  @override
+  void initState() {
+    super.initState();
+    _attachmentType = widget.initialAttachmentType;
+    if (_attachmentType != AttachmentType.none) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _triggerPicker(_attachmentType);
+      });
+    }
+  }
+
+  Future<void> _triggerPicker(AttachmentType type) async {
+    try {
+      if (type == AttachmentType.camera || type == AttachmentType.image) {
+        final ImagePicker picker = ImagePicker();
+        final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+        if (photo != null) {
+          final file = File(photo.path);
+          final bytes = await file.length();
+          setState(() {
+            _attachmentType = AttachmentType.image;
+            _selectedFile = file;
+            _fileName = photo.name;
+            _fileSize = '${(bytes / 1024).toStringAsFixed(1)} KB';
+          });
+        } else {
+          setState(() => _attachmentType = AttachmentType.none);
+        }
+      } else if (type == AttachmentType.gallery) {
+        final ImagePicker picker = ImagePicker();
+        final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+        if (image != null) {
+          final file = File(image.path);
+          final bytes = await file.length();
+          setState(() {
+            _attachmentType = AttachmentType.image;
+            _selectedFile = file;
+            _fileName = image.name;
+            _fileSize = '${(bytes / 1024).toStringAsFixed(1)} KB';
+          });
+        } else {
+          setState(() => _attachmentType = AttachmentType.none);
+        }
+      } else if (type == AttachmentType.document) {
+        List<PlatformFile>? result = await FilePicker.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['pdf', 'doc', 'docx', 'xls', 'xlsx'],
+        );
+        if (result.isNotEmpty && result.first.path != null) {
+          final file = File(result.first.path!);
+          final bytes = await file.length();
+          setState(() {
+            _attachmentType = AttachmentType.document;
+            _selectedFile = file;
+            _fileName = result.first.name;
+            _fileExtension = result.first.extension;
+            _fileSize = '${(bytes / 1024).toStringAsFixed(1)} KB';
+          });
+        } else {
+          setState(() => _attachmentType = AttachmentType.none);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error picking file: $e");
+      setState(() => _attachmentType = AttachmentType.none);
+    }
+  }
 
   final List<Map<String, String>> _exampleSituations = [
     {
@@ -65,15 +145,9 @@ class _LegalSituationCheckerState extends State<LegalSituationChecker> {
                     subtitle: "Buka kamera",
                     iconPath: 'assets/images/scan_kamera.svg',
                     bgColor: const Color(0xFFF3E8FF),
-                    onTap: () async {
+                    onTap: () {
                       Navigator.pop(context);
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const CameraScreen()),
-                      );
-                      if (result == true) {
-                        setState(() => _attachmentType = AttachmentType.image);
-                      }
+                      _triggerPicker(AttachmentType.camera);
                     },
                   ),
                   _buildAttachmentOption(
@@ -83,7 +157,7 @@ class _LegalSituationCheckerState extends State<LegalSituationChecker> {
                     bgColor: const Color(0xFFE0E7FF),
                     onTap: () {
                       Navigator.pop(context);
-                      setState(() => _attachmentType = AttachmentType.image);
+                      _triggerPicker(AttachmentType.gallery);
                     },
                   ),
                   _buildAttachmentOption(
@@ -94,7 +168,7 @@ class _LegalSituationCheckerState extends State<LegalSituationChecker> {
                     isHighlighted: true,
                     onTap: () {
                       Navigator.pop(context);
-                      setState(() => _attachmentType = AttachmentType.document);
+                      _triggerPicker(AttachmentType.document);
                     },
                   ),
                 ],
@@ -307,8 +381,10 @@ class _LegalSituationCheckerState extends State<LegalSituationChecker> {
                       width: 80,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        image: const DecorationImage(
-                          image: AssetImage('assets/images/robot_avatar-24af35.png'), // Placeholder image
+                        image: DecorationImage(
+                          image: _selectedFile != null
+                              ? FileImage(_selectedFile!) as ImageProvider
+                              : const AssetImage('assets/images/robot_avatar-24af35.png'),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -319,7 +395,10 @@ class _LegalSituationCheckerState extends State<LegalSituationChecker> {
                             top: -6,
                             right: -6,
                             child: GestureDetector(
-                              onTap: () => setState(() => _attachmentType = AttachmentType.none),
+                              onTap: () => setState(() {
+                                _attachmentType = AttachmentType.none;
+                                _selectedFile = null;
+                              }),
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: const BoxDecoration(
@@ -350,21 +429,24 @@ class _LegalSituationCheckerState extends State<LegalSituationChecker> {
                               color: const Color(0xFF388E3C),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Text("xlsx", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                            child: Text((_fileExtension ?? "DOC").toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("Catatan_Angsuran (2).xlsx", style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textDark)),
-                                SizedBox(height: 2),
-                                Text("XLSX • 22.1 KB", style: TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w500)),
+                                Text(_fileName ?? "Document", style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textDark), overflow: TextOverflow.ellipsis),
+                                const SizedBox(height: 2),
+                                Text("${(_fileExtension ?? 'DOC').toUpperCase()} • ${_fileSize ?? ''}", style: const TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w500)),
                               ],
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => setState(() => _attachmentType = AttachmentType.none),
+                            onTap: () => setState(() {
+                              _attachmentType = AttachmentType.none;
+                              _selectedFile = null;
+                            }),
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: const BoxDecoration(

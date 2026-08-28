@@ -16,6 +16,7 @@ class Tahap3Screen extends StatefulWidget {
 
 class _Tahap3ScreenState extends State<Tahap3Screen> {
   int _currentStep = 0;
+  bool _hasError = false;
   final List<String> _steps = [
     "Memahami situasimu",
     "Menganalisis informasi",
@@ -38,6 +39,7 @@ class _Tahap3ScreenState extends State<Tahap3Screen> {
     } catch (e) {
       if (mounted) {
         setState(() {
+          _hasError = true;
           _currentStep = 7; // Failed state
         });
       }
@@ -57,9 +59,11 @@ class _Tahap3ScreenState extends State<Tahap3Screen> {
   Future<void> _runAnimationSequence() async {
     // 1. Initial State (Menganalisis)
     await Future.delayed(const Duration(seconds: 2));
+    if (_hasError) return;
     
     // 2. Processing Steps
     for (int i = 0; i < _steps.length; i++) {
+      if (_hasError) return;
       if (mounted) {
         setState(() {
           _currentStep = i + 1;
@@ -67,6 +71,8 @@ class _Tahap3ScreenState extends State<Tahap3Screen> {
       }
       await Future.delayed(const Duration(seconds: 1));
     }
+    
+    if (_hasError) return;
     
     // 3. Hampir Siap State
     if (mounted) {
@@ -132,12 +138,6 @@ class _Tahap3ScreenState extends State<Tahap3Screen> {
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/beranda_bg.png',
-              fit: BoxFit.cover,
-            ),
-          ),
           SafeArea(
             child: Center(
               child: _buildCurrentStateWidget(),
