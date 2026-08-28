@@ -6,7 +6,7 @@ import '../models/panduan_model.dart';
 
 class AIService {
   // We use GROQ_API_KEY from .env
-  static final String _apiKey = dotenv.env['GROQ_API_KEY'] ?? '';
+  static String get _apiKey => dotenv.env['GROQ_API_KEY'] ?? '';
   
   static Future<LegalAnalysisResponse> analyzeLegalSituation(LegalAnalysisRequest request) async {
     if (_apiKey.isEmpty) {
@@ -14,14 +14,14 @@ class AIService {
     }
 
     final systemInstruction = '''
-Kamu adalah asisten hukum AI yang ahli di Indonesia. Tugasmu adalah menganalisis situasi hukum yang diberikan pengguna dan memberikan penjelasan yang mudah dipahami, potensi risiko, serta langkah yang harus diambil. 
+Kamu adalah pengacara dan asisten hukum AI yang ahli di Indonesia. Tugasmu adalah menganalisis situasi hukum yang diberikan pengguna dan memberikan penjelasan, potensi risiko, serta langkah yang harus diambil. Jawabanmu harus sangat spesifik dan berkaitan langsung dengan detail kasus/situasi yang diberikan oleh pengguna.
 Format jawabanmu HARUS berupa JSON murni dengan struktur sebagai berikut:
 {
   "status": "Aman" / "Hati-hati" / "Bahaya",
   "penjelasanSingkat": "Penjelasan singkat tentang situasi tersebut (maks 3 kalimat).",
-  "potensiRisiko": ["Risiko 1", "Risiko 2"],
-  "langkahHukum": ["Langkah 1", "Langkah 2"],
-  "tips": ["Tips 1", "Tips 2"],
+  "potensiRisiko": ["Sebutkan risiko spesifik dari situasi ini", "Sebutkan risiko lainnya"],
+  "langkahHukum": ["Langkah hukum spesifik pertama", "Langkah hukum spesifik kedua"],
+  "tips": ["Tips spesifik 1", "Tips spesifik 2"],
   "disclaimer": "Penjelasan bahwa ini bukan nasihat hukum profesional."
 }
 Pastikan hanya mengembalikan JSON tanpa tambahan teks lain atau markdown formatting.
@@ -37,7 +37,7 @@ Analisis situasi berikut:
 ''';
 
     try {
-      String modelName = 'llama-3.3-70b-versatile';
+      String modelName = 'qwen/qwen3.8-27b';
       final List<Map<String, dynamic>> userMessageContent = [
         {'type': 'text', 'text': prompt}
       ];
@@ -46,7 +46,7 @@ Analisis situasi berikut:
       if (request.attachment != null) {
         final path = request.attachment!.path.toLowerCase();
         if (path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.webp')) {
-          modelName = 'llama-3.2-11b-vision-preview';
+          modelName = 'qwen/qwen3.8-27b';
           final bytes = await request.attachment!.readAsBytes();
           final base64Image = base64Encode(bytes);
           
@@ -73,7 +73,7 @@ Analisis situasi berikut:
       };
 
       // Vision model di Groq saat ini tidak mendukung response_format json_object
-      if (modelName != 'llama-3.2-11b-vision-preview') {
+      if (modelName != 'qwen/qwen3.8-27b_vision_disabled') {
         requestBody['response_format'] = {'type': 'json_object'};
       }
 
@@ -87,7 +87,7 @@ Analisis situasi berikut:
       );
 
       if (response.statusCode != 200) {
-        throw Exception("Groq API Error: \${response.body}");
+        throw Exception("Groq API Error: ${response.body}");
       }
 
       final responseData = jsonDecode(response.body);
@@ -152,7 +152,7 @@ Gunakan bahasa Indonesia yang mudah dipahami orang awam. Jangan tambahkan teks a
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'model': 'llama-3.3-70b-versatile',
+          'model': 'qwen/qwen3.8-27b',
           'messages': [
             {'role': 'system', 'content': systemInstruction},
             {'role': 'user', 'content': prompt}
@@ -163,7 +163,7 @@ Gunakan bahasa Indonesia yang mudah dipahami orang awam. Jangan tambahkan teks a
       );
 
       if (response.statusCode != 200) {
-        throw Exception("Groq API Error: \${response.body}");
+        throw Exception("Groq API Error: ${response.body}");
       }
 
       final responseData = jsonDecode(response.body);

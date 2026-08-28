@@ -257,7 +257,8 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
                             MaterialPageRoute(
                               builder: (context) => HasilAnalisisDetailScreen(
                                 title: "Langkah Hukum",
-                                description: widget.response.langkahHukum.map((e) => "- \$e").join('\n\n'),
+                                description: "Rekomendasi langkah hukum yang bisa kamu ambil terkait situasi ini.",
+                                items: widget.response.langkahHukum,
                                 icon: Icons.balance,
                               ),
                             ),
@@ -274,7 +275,8 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
                             MaterialPageRoute(
                               builder: (context) => HasilAnalisisDetailScreen(
                                 title: "Potensi Risiko",
-                                description: widget.response.potensiRisiko.map((e) => "- \$e").join('\n\n'),
+                                description: "Risiko yang mungkin terjadi jika masalah tidak ditangani dengan tepat.",
+                                items: widget.response.potensiRisiko,
                                 icon: Icons.gavel,
                               ),
                             ),
@@ -291,7 +293,8 @@ class _HasilAnalisisScreenState extends State<HasilAnalisisScreen> {
                             MaterialPageRoute(
                               builder: (context) => HasilAnalisisDetailScreen(
                                 title: "Tips Tambahan",
-                                description: widget.response.tips.map((e) => "- \$e").join('\n\n'),
+                                description: "Beberapa tips tambahan untuk membantumu menghadapi situasi ini.",
+                                items: widget.response.tips,
                                 icon: Icons.lightbulb,
                               ),
                             ),

@@ -166,12 +166,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: Stack(
         children: [
           Positioned(
-            top: -80,
-            right: -20,
-            left: -20,
+            top: 0,
+            right: 0,
             child: SvgPicture.asset(
               'assets/images/login_top_shape.svg',
-              fit: BoxFit.contain,
             ),
           ),
           Positioned(
@@ -182,7 +180,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               opacity: 0.5,
               child: Image.asset(
                 'assets/images/auth_bottom_illus.png', 
-                fit: BoxFit.contain,
+                fit: BoxFit.fitWidth,
                 alignment: Alignment.bottomCenter,
               ),
             ),

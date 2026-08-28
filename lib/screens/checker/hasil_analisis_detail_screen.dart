@@ -4,12 +4,14 @@ import '../../theme/app_theme.dart';
 class HasilAnalisisDetailScreen extends StatelessWidget {
   final String title;
   final String description;
+  final List<String> items;
   final IconData icon;
 
   const HasilAnalisisDetailScreen({
     super.key,
     required this.title,
     required this.description,
+    required this.items,
     required this.icon,
   });
 
@@ -94,7 +96,7 @@ class HasilAnalisisDetailScreen extends StatelessWidget {
                   
                   Expanded(
                     child: ListView.builder(
-                      itemCount: 4,
+                      itemCount: items.length,
                       itemBuilder: (context, index) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12.0),
@@ -128,7 +130,7 @@ class HasilAnalisisDetailScreen extends StatelessWidget {
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Text(
-                                    "Hak untuk mendapatkan penjelasan tertulis mengenai tindakan yang diambil pihak lain.",
+                                    items[index],
                                     style: const TextStyle(
                                       fontSize: 13,
                                       color: AppColors.textDark,

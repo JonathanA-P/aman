@@ -66,6 +66,47 @@ class _HistoriScreenState extends State<HistoriScreen> {
     }
   }
 
+  Future<void> _analyzeHistory(String title) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final request = LegalAnalysisRequest(
+        situasi: title,
+        kapan: 'Tidak diketahui',
+        dimana: 'Indonesia',
+        hasEvidence: 'Belum dipastikan',
+        tindakan: 'Belum ada',
+      );
+      final response = await AIService.analyzeLegalSituation(request);
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HasilAnalisisScreen(
+              response: response,
+              isFromHistory: true,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menganalisis riwayat: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -349,22 +390,7 @@ class _HistoriScreenState extends State<HistoriScreen> {
         final item = filteredData[index];
         return GestureDetector(
           onTap: () {
-            // Dummy response for history detail
-            final dummyResponse = LegalAnalysisResponse(
-              status: "Hati-hati",
-              penjelasanSingkat: "Masalah ${item['title']} ini memerlukan perhatian karena berpotensi merugikan hak hukum Anda. Segera lakukan dokumentasi.",
-              potensiRisiko: ["Kehilangan hak kepemilikan atau uang", "Tuntutan balik dari pihak lain", "Proses yang memakan waktu lama"],
-              langkahHukum: ["Kumpulkan semua bukti transaksi atau surat menyurat", "Berikan somasi tertulis", "Konsultasi ke mediator atau advokat"],
-              tips: ["Jangan menghapus chat atau bukti apapun", "Bersikap kooperatif namun tegas"],
-              disclaimer: "Analisis ini dihasilkan oleh AI berdasarkan riwayat masa lalu dan bukan nasihat hukum profesional."
-            );
-            Navigator.push(
-              context, 
-              MaterialPageRoute(builder: (context) => HasilAnalisisScreen(
-                response: dummyResponse,
-                isFromHistory: true,
-              ))
-            );
+            _analyzeHistory(item['title']!);
           },
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -444,20 +470,7 @@ class _HistoriScreenState extends State<HistoriScreen> {
         final item = filteredData[index];
         return GestureDetector(
           onTap: () {
-            // Dummy response for history detail
-            final dummyPanduan = PanduanModel(
-              kategori: "Umum",
-              judul: item['title']!,
-              definisi: item['desc']!,
-              poinPenting: ["Terkait dengan hukum perdata", "Membutuhkan bukti tertulis"],
-              langkahLangkah: ["Konsultasikan dengan pengacara", "Kumpulkan dokumen pendukung"]
-            );
-            Navigator.push(
-              context, 
-              MaterialPageRoute(builder: (context) => PanduanDetailScreen(
-                panduan: dummyPanduan,
-              ))
-            );
+            _searchVocabulary(item['title']!);
           },
           child: Container(
             padding: const EdgeInsets.all(16),

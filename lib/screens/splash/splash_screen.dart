@@ -219,8 +219,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   children: [
                     Opacity(
                       opacity: _characterOpacity.value,
-                      child: SvgPicture.asset(
-                        'assets/images/character_1.svg',
+                      child: Image.asset(
+                        'assets/images/app_logo.png',
                         width: 200,
                       ),
                     ),

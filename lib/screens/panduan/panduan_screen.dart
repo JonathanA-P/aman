@@ -227,20 +227,7 @@ class _PanduanScreenState extends State<PanduanScreen> {
                 final item = _guidelines[index];
                 return GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PanduanDetailScreen(
-                          panduan: PanduanModel(
-                            kategori: "Hukum",
-                            judul: item["title"]!,
-                            definisi: "Ini adalah penjelasan singkat mengenai ${item['title']}. (Fitur ini sedang dalam pengembangan, gunakan pencarian 'Istilah Hukum' di menu Histori untuk definisi AI).",
-                            poinPenting: ["Poin 1 terkait ${item['title']}", "Poin 2 terkait ${item['title']}"],
-                            langkahLangkah: ["Langkah pertama", "Langkah kedua"],
-                          ),
-                        ),
-                      ),
-                    );
+                    _searchVocabulary(item["title"]!);
                   },
                   child: Container(
                     padding: const EdgeInsets.all(16),
