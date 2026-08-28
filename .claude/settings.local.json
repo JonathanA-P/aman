@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(npm list *)",
+      "Bash(npm list *)",
+      "WebFetch(domain:www.figma.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:docs.mcp.dev)",
+      "PowerShell(Get-ChildItem . -Recurse -Force -ErrorAction SilentlyContinue | Where-Object { $_.Name -match \"figma|mcp|design\" } | Select-Object FullName | Select-Object -First 30)",
+      "Bash(/c/Users/Alfredo/AppData/Local/npm-cache/_npx/e05028111420be70/node_modules/.bin/figma-developer-mcp --help)",
+      "Bash(npx *)",
+      "Bash(curl *)",
+      "PowerShell(Get-NetTCPConnection *)",
+      "Bash(xargs grep -l -i \"figma\\\\|mcp\")",
+      "Bash(echo \"Server starting on PID: $!\")",
+      "PowerShell(Get-Process *)",
+      "PowerShell($connection = Get-NetTCPConnection -LocalPort 3845 -ErrorAction SilentlyContinue; if \\($connection\\) { foreach \\($conn in $connection\\) { if \\($conn.OwningProcess -ne 0\\) { Stop-Process -Id $conn.OwningProcess -Force -Confirm:$false; Write-Output \"Stopped process with PID $\\($conn.OwningProcess\\)\" } } } else { Write-Output \"No active connection on port 3845\" })"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "figma"
+  ]
+}
