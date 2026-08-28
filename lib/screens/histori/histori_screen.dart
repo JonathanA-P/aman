@@ -22,9 +22,11 @@ class _HistoriScreenState extends State<HistoriScreen> {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              Container(
-                height: 220,
-                width: double.infinity,
+              Column(
+                children: [
+                  Container(
+                    height: 220,
+                    width: double.infinity,
                 decoration: const BoxDecoration(
                   color: AppColors.brandNavy,
                   borderRadius: BorderRadius.only(
@@ -69,9 +71,12 @@ class _HistoriScreenState extends State<HistoriScreen> {
                   ],
                 ),
               ),
-              Positioned(
-                bottom: -80,
-                left: 20,
+              const SizedBox(height: 80),
+            ],
+          ),
+          Positioned(
+            bottom: 0,
+            left: 20,
                 right: 20,
                 child: Column(
                   children: [
@@ -187,89 +192,199 @@ class _HistoriScreenState extends State<HistoriScreen> {
             ],
           ),
           
-          const SizedBox(height: 100), // Spacing to account for the positioned elements
+          const SizedBox(height: 20), // Reduced from 100 because 80 was absorbed by the Stack
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 24),
-                  Image.asset(
-                    'assets/images/robot_avatar-24af35.png', // Placeholder for the sad robot
-                    width: 160,
-                    height: 160,
-                    fit: BoxFit.contain,
+            child: _searchQuery.isNotEmpty
+                ? _buildEmptySearchState()
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                    child: _selectedTab == 0 ? _buildListHasilAnalisis() : _buildListIstilahHukum(),
                   ),
-                  const SizedBox(height: 32),
-                  
-                  if (_searchQuery.isEmpty)
-                    const Text(
-                      "Kamu belum pernah melakukan analisis",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                    
-                  if (_searchQuery.isNotEmpty) ...[
-                    const Text(
-                      "Analisis tidak ditemukan",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.highlightBlue,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Coba gunakan kata kunci lain atau mulai analisis baru",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                  
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LegalSituationChecker()),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.highlightBlue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        "Mulai Analisis",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptySearchState() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 24),
+          Image.asset(
+            'assets/images/robot_avatar-24af35.png', // Placeholder for the sad robot
+            width: 160,
+            height: 160,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            "Pencarian tidak ditemukan",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: AppColors.highlightBlue,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Coba gunakan kata kunci lain",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textMuted,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildListHasilAnalisis() {
+    final List<Map<String, String>> dummyData = [
+      {"title": "Penipuan Online", "date": "Hari ini"},
+      {"title": "Pencurian Kendaraan", "date": "Kemarin"},
+      {"title": "Sengketa Lahan", "date": "23 Jan"},
+      {"title": "Pencemaran Nama Baik", "date": "20 Jan"},
+      {"title": "Masalah Ketenagakerjaan", "date": "18 Jan"},
+    ];
+    
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: dummyData.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final item = dummyData[index];
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE9EBF8)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(5),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              )
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FE),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.description_outlined, color: AppColors.brandNavy),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['title']!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: AppColors.brandNavy,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item['date']!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildListIstilahHukum() {
+    final List<Map<String, String>> dummyData = [
+      {"title": "Wanprestasi", "desc": "Kelalaian debitur dalam memenuhi..."},
+      {"title": "Gugatan", "desc": "Tuntutan hak ke pengadilan..."},
+      {"title": "Somasi", "desc": "Teguran tertulis sebelum..."},
+      {"title": "Pidana", "desc": "Tindak kejahatan yang..."},
+      {"title": "Perdata", "desc": "Hukum yang mengatur hubungan..."},
+    ];
+    
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: dummyData.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final item = dummyData[index];
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE9EBF8)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(5),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              )
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FE),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.menu_book_outlined, color: AppColors.goldYellow),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['title']!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: AppColors.brandNavy,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item['desc']!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
+        );
+      },
     );
   }
 }
